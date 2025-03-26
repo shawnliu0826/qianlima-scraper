@@ -1,0 +1,37 @@
+name: 千里马招标信息抓取
+
+on:
+  schedule:
+    - cron: '0 10 * * *'  # 每天上午10点运行
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: 设置 Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: 安装 Chrome
+      run: |
+        wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+        echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
+        apt-get update
+        apt-get install -y google-chrome-stable
+    
+    - name: 安装依赖
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: 运行脚本
+      env:
+        USERNAME: ${{ secrets.QLM_USERNAME }}
+        PASSWORD: ${{ secrets.QLM_PASSWORD }}
+        WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+      run: python qianlima_scraper.py 
